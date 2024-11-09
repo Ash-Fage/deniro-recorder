@@ -6,6 +6,7 @@ host = ''
 port = 1212
 tscribe = Transcriber()
 
+
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
