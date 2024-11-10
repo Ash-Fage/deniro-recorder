@@ -1,8 +1,8 @@
 import whisper
 import wave
 import struct
+import time
 from pvrecorder import PvRecorder
-from pynput import keyboard
 
 
 class Transcriber:
@@ -14,35 +14,24 @@ class Transcriber:
         self.recording = False
         self.prompt = "No Audio File Detected"
 
-    def on_press(self, key):  # used to toggle recording status when shift is pressed
-        if key == keyboard.Key.shift:
-            if self.recording:
-                self.recording = False
-            else:
-                self.recording = True
-
     def record(self):
         self.audio = []  # reset audio recording
 
-        print("Press SHIFT to start and stop recording")
+        print("Recording for 1 minute...")
 
-        with keyboard.Listener(on_press=self.on_press) as listener:  # creates a new  keyboard listener
-            while True:  # loop will execute until some audio has been recorded
-                if self.recording:
-                    print("Recording...")
-                    self.recorder.start()
+        self.recorder.start()
 
-                    while self.recording:  # will loop until shift is pressed and recording status changed
-                        frame = self.recorder.read()  # reads audio frame from recorder
-                        self.audio.extend(frame)  # adds audio frame to array
+        # Record for 60 seconds
+        start_time = time.time()
+        while True:
+            frame = self.recorder.read()  # Read audio frame from recorder
+            self.audio.extend(frame)  # Add audio frame to array
 
-                    break
+            # Stop recording after 60 seconds
+            if time.time() - start_time >= 60:
+                break  # Exit the loop after 60 seconds
 
-                if self.audio:  # terminates loop after any audio has been recorded
-                    self.recorder.stop()
-                    break
-
-            listener.stop()  # terminates keyboard listener
+        self.recorder.stop()  # Stop the recorder after time limit is reached
 
         print("Recording Stopped\n")
 
