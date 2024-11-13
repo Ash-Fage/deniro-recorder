@@ -1,8 +1,8 @@
 import whisper
 import wave
 import struct
-import time
 from pvrecorder import PvRecorder
+from pynput import keyboard
 
 
 class Transcriber:
@@ -11,29 +11,33 @@ class Transcriber:
         self.model = whisper.load_model('base.en')
         self.audio = []
         self.file = "record.wav"
-        self.recording = False
         self.prompt = "No Audio File Detected"
+        self.stop_recording = False
+
+    def on_press(self, key):
+        try:
+            if key == keyboard.Key.space:
+                self.stop_recording = True
+                print("Space key pressed. Sending recording...\n")
+        except Exception as e:
+            print(f"Error: {e}")
 
     def record(self):
         self.audio = []  # reset audio recording
-
-        print("Recording for 1 minute...")
+        self.stop_recording = False
+        print("Press SPACE to stop recording...")
 
         self.recorder.start()
 
-        # Record for 60 seconds
-        start_time = time.time()
-        while True:
-            frame = self.recorder.read()  # Read audio frame from recorder
-            self.audio.extend(frame)  # Add audio frame to array
+        listener = keyboard.Listener(on_press=self.on_press)
+        listener.start()
 
-            # Stop recording after 60 seconds
-            if time.time() - start_time >= 60:
-                break  # Exit the loop after 60 seconds
+        while not self.stop_recording:
+            frame = self.recorder.read()
+            self.audio.extend(frame)
 
-        self.recorder.stop()  # Stop the recorder after time limit is reached
-
-        print("Recording Stopped\n")
+        self.recorder.stop()
+        listener.stop()
 
         with wave.open(self.file, 'wb') as f:
             params = (1, 2, 16000, 512, 'NONE', 'not compressed')
