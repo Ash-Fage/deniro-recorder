@@ -10,7 +10,6 @@ tscribe = Transcriber()
 def main():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
-
         while True:
             tscribe.record()
             transcription = tscribe.transcribe().strip()
